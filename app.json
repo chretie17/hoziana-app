@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "Hoziana Choir",
+    "slug": "hoziana-choir",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "hoziana",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#07130f",
+    "ios": {
+      "bundleIdentifier": "org.hoziana.choir",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "org.hoziana.choir",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "name": "Hoziana Choir",
+      "shortName": "Hoziana",
+      "themeColor": "#07130f",
+      "backgroundColor": "#07130f",
+      "lang": "rw"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 180
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": true
+        }
+      ],
+      "expo-localization",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "description": "Hoziana Choir ADEPR Nyarugenge — the songbook, recordings, videos and news of the choir."
+  }
+}
