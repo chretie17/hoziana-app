@@ -81,7 +81,7 @@ The same app runs in a phone's browser, which is how it is shown before it is
 in the stores. `vercel.json` builds it with `npx expo export --platform web`
 and serves `dist`, sending every address to the app so a link to a song opens
 that song. Import this repository as a second project in Vercel and it deploys
-on every push, free on the Hobby plan.
+on every push, free on the Hobby plan. `netlify.toml` does the same on Netlify.
 
 A browser cannot do everything the installed app does: a recording stops when
 the phone locks, and the songbook is saved by the browser rather than built in.

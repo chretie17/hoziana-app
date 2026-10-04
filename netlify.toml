@@ -1,0 +1,13 @@
+# The same build as vercel.json, for Netlify: the web version of the app,
+# with every address sent to it so a link to a song opens that song.
+[build]
+  command = "npx expo export --platform web"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
