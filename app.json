@@ -27,7 +27,12 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Hoziana Choir",
+      "shortName": "Hoziana",
+      "themeColor": "#07130f",
+      "backgroundColor": "#07130f",
+      "lang": "rw"
     },
     "plugins": [
       "expo-router",
@@ -53,6 +58,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "description": "Hoziana Choir ADEPR Nyarugenge — the songbook, recordings, videos and news of the choir."
   }
 }
