@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useDeferredValue, useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
@@ -17,8 +17,16 @@ export default function Songs() {
   const { content, status, refresh } = useContent();
   const { t } = useLanguage();
   const palette = usePalette();
+  const { focus, only } = useLocalSearchParams<{ focus?: string; only?: string }>();
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>(only === "audio" ? "audio" : "all");
+  // Home's "With audio" can arrive while this tab is already open, so the
+  // filter follows the link each time it changes rather than only at first.
+  const [linked, setLinked] = useState(only);
+  if (only !== linked) {
+    setLinked(only);
+    setFilter(only === "audio" ? "audio" : "all");
+  }
   const deferred = useDeferredValue(query);
 
   const ordered = useMemo(
@@ -48,7 +56,7 @@ export default function Songs() {
           <View style={styles.header}>
             <Kicker>{t.songbookCount(content.songs.length)}</Kicker>
             <Heading size={36} style={styles.title}>{t.songbook}</Heading>
-            <SearchField value={query} onChange={setQuery} placeholder={t.searchSongs} />
+            <SearchField value={query} onChange={setQuery} placeholder={t.searchSongs} autoFocus={focus === "1"} />
             {withAudio && (
               <View style={styles.chips}>
                 <Chip label={t.all} active={filter === "all"} onPress={() => setFilter("all")} />

@@ -59,7 +59,7 @@ export function StatusNote() {
   );
 }
 
-export function SearchField({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+export function SearchField({ value, onChange, placeholder, autoFocus = false }: { value: string; onChange: (value: string) => void; placeholder: string; autoFocus?: boolean }) {
   const palette = usePalette();
   return (
     <View style={[styles.search, { backgroundColor: palette.card, borderColor: palette.line }]}>
@@ -73,6 +73,7 @@ export function SearchField({ value, onChange, placeholder }: { value: string; o
         autoCorrect={false}
         autoCapitalize="none"
         returnKeyType="search"
+        autoFocus={autoFocus}
         clearButtonMode="while-editing"
         accessibilityLabel={placeholder}
       />

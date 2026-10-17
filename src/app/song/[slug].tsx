@@ -7,6 +7,7 @@ import { Button, Heading, Kicker, Screen } from "@/components/ui";
 import { useContent } from "@/lib/content";
 import { useLanguage } from "@/lib/i18n";
 import { clock, usePlayer } from "@/lib/player";
+import { useRecents } from "@/lib/recents";
 import { readText, writeText } from "@/lib/storage";
 import { fonts, usePalette } from "@/lib/theme";
 import type { Song } from "@/lib/types";
@@ -41,6 +42,11 @@ export default function SongPage() {
   );
   const index = ordered.findIndex((song) => song.slug === slug);
   const song = ordered[index];
+
+  const { remember } = useRecents();
+  useEffect(() => {
+    if (song) remember(song.slug);
+  }, [song, remember]);
 
   if (!song) {
     return (

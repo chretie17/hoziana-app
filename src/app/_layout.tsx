@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ContentProvider } from "@/lib/content";
 import { LanguageProvider } from "@/lib/i18n";
 import { PlayerProvider } from "@/lib/player";
+import { RecentsProvider } from "@/lib/recents";
 import { usePalette } from "@/lib/theme";
 
 void SplashScreen.preventAutoHideAsync();
@@ -35,7 +36,6 @@ function Navigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="song/[slug]" options={{ title: "" }} />
         <Stack.Screen name="video/[id]" options={{ title: "", headerStyle: { backgroundColor: palette.dark }, headerTintColor: "#fff" }} />
-        <Stack.Screen name="update/[slug]" options={{ title: "" }} />
       </Stack>
     </>
   );
@@ -62,9 +62,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ContentProvider>
         <LanguageProvider>
-          <PlayerProvider>
-            <Navigator />
-          </PlayerProvider>
+          <RecentsProvider>
+            <PlayerProvider>
+              <Navigator />
+            </PlayerProvider>
+          </RecentsProvider>
         </LanguageProvider>
       </ContentProvider>
     </SafeAreaProvider>
