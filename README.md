@@ -7,6 +7,11 @@ saved there reaches the app and the website together.
 
 ## What it does
 
+- **Home** — opens on the songbook, as a choir member reaches for it: a
+  greeting, a search that lands in the songbook with the keyboard up, the song
+  of the day with its opening lines (the same song for everyone all day, a new
+  one tomorrow), a box to go straight to a song by its number, and the songs
+  this phone opened last.
 - **Songbook** — all the songs, searchable by title, key, verse or number.
   Case, accents and the curly apostrophe are ignored, so "ry'isi" finds
   "RY’ISI". Each song has a reading size that is remembered, and the previous
@@ -21,7 +26,8 @@ saved there reaches the app and the website together.
 - **Listen** — the choir's videos, songs and past live sessions apart, played
   inside the app with YouTube's own player. A live broadcast announced in the
   dashboard appears at the top of Home and Listen.
-- **Updates**, **Our story** (history, committee portraits, contact) and a
+- **Updates** open the matching page of the website over the app, so the
+  website stays where news is read in full. **Our story** (history, committee portraits, contact) and a
   choice of Kinyarwanda, English or French. The phone's language is used when
   the app speaks it, Kinyarwanda otherwise.
 - **The choir's colours and type** — the six colours set in Dashboard → Colours
@@ -113,7 +119,8 @@ once the app is published.
 | `src/app/(tabs)/` | Home, Songbook, Listen, Updates, Our story |
 | `src/app/song/[slug].tsx` | A song: words, recording, reading size |
 | `src/app/video/[id].tsx` | A video, with more of the same kind |
-| `src/app/update/[slug].tsx` | One update |
+| `src/lib/recents.tsx` | The songs this phone opened last |
+| `src/lib/website.ts` | Opens a page of the website over the app |
 | `src/lib/content.tsx` | Fetching, saving and refreshing the content |
 | `src/lib/player.tsx` | The one audio player, with lock-screen controls |
 | `src/lib/i18n.tsx` | The app's own wording in three languages |

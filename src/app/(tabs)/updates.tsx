@@ -1,11 +1,12 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
 import { Body, Heading, Kicker, Screen, StatusNote } from "@/components/ui";
 import { useContent } from "@/lib/content";
 import { formatDate, useLanguage } from "@/lib/i18n";
 import { fonts, usePalette } from "@/lib/theme";
+import { openWebsite } from "@/lib/website";
 
 export default function Updates() {
   const { content, status, refresh } = useContent();
@@ -28,16 +29,19 @@ export default function Updates() {
         ListEmptyComponent={<Body muted style={styles.empty}>{t.noUpdates}</Body>}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => router.push({ pathname: "/update/[slug]", params: { slug: item.slug } })}
+            onPress={() => void openWebsite(`/updates/${item.slug}`, palette.accentDeep)}
             style={({ pressed }) => [styles.card, { backgroundColor: palette.card, borderColor: palette.line, opacity: pressed ? 0.85 : 1 }]}
-            accessibilityRole="button"
+            accessibilityRole="link"
           >
             {item.imageUrl ? <Image source={item.imageUrl} accessibilityLabel={item.imageAlt} style={styles.image} contentFit="cover" transition={200} /> : null}
             <View style={styles.body}>
               <Kicker>{t.categories[item.category] ?? item.category} · {formatDate(item.publishedOn, language)}</Kicker>
               <Text style={[styles.cardTitle, { color: palette.ink }]}>{pick(item.title)}</Text>
               <Body muted numberOfLines={3}>{pick(item.excerpt)}</Body>
-              <Text style={[styles.more, { color: palette.accentDeep }]}>{t.readMore} →</Text>
+              <View style={styles.moreRow}>
+                <Text style={[styles.more, { color: palette.accentDeep }]}>{t.readOnWebsite}</Text>
+                <Ionicons name="open-outline" size={15} color={palette.accentDeep} />
+              </View>
             </View>
           </Pressable>
         )}
@@ -56,5 +60,6 @@ const styles = StyleSheet.create({
   image: { width: "100%", aspectRatio: 16 / 9 },
   body: { padding: 16, gap: 8 },
   cardTitle: { fontFamily: fonts.display, fontSize: 25, lineHeight: 29 },
-  more: { fontFamily: fonts.textBold, fontSize: 13, marginTop: 4 },
+  moreRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
+  more: { fontFamily: fonts.textBold, fontSize: 13 },
 });
