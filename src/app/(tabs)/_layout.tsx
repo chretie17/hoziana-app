@@ -24,10 +24,10 @@ export default function TabLayout() {
         tabBarActiveTintColor: palette.accentDeep,
         tabBarInactiveTintColor: palette.muted,
         tabBarStyle: { backgroundColor: "#ffffff", borderTopColor: palette.line },
-        tabBarLabelStyle: { fontFamily: fonts.textMedium, fontSize: 11, lineHeight: 14 },
+        tabBarLabelStyle: { fontFamily: fonts.textBold, fontSize: 11.5, lineHeight: 14 },
         tabBarIcon: ({ focused, color, size }) => {
           const [active, idle] = icons[route.name] ?? ["ellipse", "ellipse-outline"];
-          return <Ionicons name={focused ? active : idle} size={size - 2} color={color} />;
+          return <Ionicons name={focused ? active : idle} size={size} color={color} />;
         },
       })}
     >

@@ -25,8 +25,14 @@ export default function Songs() {
   const { content, status, refresh } = useContent();
   const { t } = useLanguage();
   const palette = usePalette();
-  const { focus, only } = useLocalSearchParams<{ focus?: string; only?: string }>();
-  const [query, setQuery] = useState("");
+  const { focus, only, q } = useLocalSearchParams<{ focus?: string; only?: string; q?: string }>();
+  const [query, setQuery] = useState(q ?? "");
+  // A search started on Home arrives as ?q=, even with this tab already open.
+  const [linkedQuery, setLinkedQuery] = useState(q);
+  if (q !== linkedQuery) {
+    setLinkedQuery(q);
+    setQuery(q ?? "");
+  }
   const [filter, setFilter] = useState<Filter>(only === "audio" ? "audio" : "all");
   // Home's "With audio" can arrive while this tab is already open, so the
   // filter follows the link each time it changes rather than only at first.
