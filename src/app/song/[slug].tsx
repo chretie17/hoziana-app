@@ -74,31 +74,24 @@ export default function SongPage() {
         <View style={[styles.hero, { backgroundColor: palette.dark }]}>
           {song.order ? <Text style={[styles.heroNumber, { color: palette.darkSoft }]} accessible={false}>{song.order}</Text> : null}
           <Kicker light>{song.status === "awaiting-review" ? t.awaitingReview : song.order ? `${t.songbook} · ${String(song.order).padStart(2, "0")}` : t.songbook}</Kicker>
-          <Heading light size={34} style={styles.title}>{song.title}</Heading>
+          <Heading light size={26} style={styles.title}>{song.title}</Heading>
           <View style={styles.facts}>
             {song.key ? <Fact icon="musical-note" label={t.key} value={song.key} /> : null}
             {song.bibleReference ? <Fact icon="book-outline" label={t.scripture} value={song.bibleReference} /> : null}
+            {onAlbums.map(({ album, track }) => (
+              <Pressable
+                key={album.id}
+                onPress={() => router.push({ pathname: "/album/[id]", params: { id: album.id } })}
+                style={({ pressed }) => [styles.fact, { borderColor: palette.darkSoft }, pressed && { backgroundColor: "rgba(255,255,255,0.1)" }]}
+                accessibilityRole="button"
+                accessibilityLabel={`${t.albums}: ${album.title}, ${track}`}
+              >
+                <Ionicons name="disc-outline" size={12} color={palette.accent} />
+                <Text style={[styles.factValue, { color: palette.onDark }]}>{album.title}</Text>
+                <Text style={[styles.albumTrack, { color: palette.onDarkMuted }]}>#{track}</Text>
+              </Pressable>
+            ))}
           </View>
-          {onAlbums.length > 0 ? (
-            <View style={styles.albums}>
-              <Text style={[styles.albumsLabel, { color: palette.onDarkMuted }]}>{t.albums}</Text>
-              <View style={styles.facts}>
-                {onAlbums.map(({ album, track }) => (
-                  <Pressable
-                    key={album.id}
-                    onPress={() => router.push({ pathname: "/album/[id]", params: { id: album.id } })}
-                    style={({ pressed }) => [styles.fact, { borderColor: palette.darkSoft }, pressed && { backgroundColor: "rgba(255,255,255,0.1)" }]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${album.title}, ${track}`}
-                  >
-                    <Ionicons name="disc" size={14} color={palette.accent} />
-                    <Text style={[styles.factValue, { color: palette.onDark }]}>{album.title}</Text>
-                    <Text style={[styles.albumTrack, { color: palette.onDarkMuted }]}>#{track}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          ) : null}
           {song.audioUrl ? <SongAudio song={song} /> : null}
           {song.videoId ? (
             <Pressable
@@ -106,7 +99,7 @@ export default function SongPage() {
               style={({ pressed }) => [styles.watch, { borderColor: palette.darkSoft }, pressed && { backgroundColor: "rgba(255,255,255,0.08)" }]}
               accessibilityRole="button"
             >
-              <View style={[styles.watchIcon, { backgroundColor: palette.accent }]}><Ionicons name="play" size={14} color={palette.dark} style={{ marginLeft: 2 }} /></View>
+              <View style={[styles.watchIcon, { backgroundColor: palette.accent }]}><Ionicons name="play" size={12} color={palette.dark} style={{ marginLeft: 2 }} /></View>
               <Text style={[styles.watchText, { color: palette.onDark }]}>{t.watchRecording}</Text>
               <Ionicons name="chevron-forward" size={16} color={palette.onDarkMuted} />
             </Pressable>
@@ -228,7 +221,7 @@ function Fact({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; la
   const palette = usePalette();
   return (
     <View style={[styles.fact, { borderColor: palette.darkSoft }]} accessibilityLabel={`${label}: ${value}`}>
-      <Ionicons name={icon} size={14} color={palette.accent} />
+      <Ionicons name={icon} size={12} color={palette.accent} />
       <Text style={[styles.factValue, { color: palette.onDark }]}>{value}</Text>
     </View>
   );
@@ -254,7 +247,7 @@ function SongAudio({ song }: { song: Song }) {
         accessibilityRole="button"
         accessibilityLabel={playing ? t.paused : t.listenWhileReading}
       >
-        <Ionicons name={playing ? "pause" : "play"} size={24} color={palette.dark} style={playing ? undefined : { marginLeft: 3 }} />
+        <Ionicons name={playing ? "pause" : "play"} size={20} color={palette.dark} style={playing ? undefined : { marginLeft: 3 }} />
       </Pressable>
       <View style={styles.audioBody}>
         <Text style={[styles.audioLabel, { color: palette.accentSoft }]}>{t.listenWhileReading}</Text>
@@ -280,26 +273,24 @@ function SongAudio({ song }: { song: Song }) {
 const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   missing: { padding: 24, gap: 16 },
-  hero: { margin: 12, marginBottom: 0, padding: 20, paddingTop: 22, borderRadius: 26, overflow: "hidden" },
-  heroNumber: { position: "absolute", right: 14, top: -6, fontFamily: fonts.display, fontSize: 120, lineHeight: 130, opacity: 0.55 },
-  title: { marginTop: 8, paddingRight: 40 },
-  facts: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
-  fact: { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 12, height: 34, borderRadius: 17, borderWidth: 1 },
-  factValue: { fontFamily: fonts.textMedium, fontSize: 13.5 },
-  albums: { marginTop: 14, gap: 0 },
-  albumsLabel: { fontFamily: fonts.textBold, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: -6 },
-  albumTrack: { fontFamily: fonts.textBold, fontSize: 11.5 },
-  audio: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 18, padding: 12, borderRadius: 18, borderWidth: 1 },
-  audioButton: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
+  hero: { margin: 12, marginBottom: 0, padding: 16, paddingTop: 16, borderRadius: 22, overflow: "hidden" },
+  heroNumber: { position: "absolute", right: 12, top: -4, fontFamily: fonts.display, fontSize: 76, lineHeight: 84, opacity: 0.5 },
+  title: { marginTop: 4, paddingRight: 56 },
+  facts: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
+  fact: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, height: 26, borderRadius: 13, borderWidth: 1 },
+  factValue: { fontFamily: fonts.textMedium, fontSize: 12 },
+  albumTrack: { fontFamily: fonts.textBold, fontSize: 10.5 },
+  audio: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, padding: 10, borderRadius: 16, borderWidth: 1 },
+  audioButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   audioBody: { flex: 1 },
   audioLabel: { fontFamily: fonts.textBold, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase" },
   track: { height: 26, justifyContent: "center" },
   trackLine: { height: 4, borderRadius: 2, overflow: "hidden" },
   trackFill: { height: 4 },
   audioTime: { color: "#ffffffb0", fontFamily: fonts.text, fontSize: 12 },
-  watch: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, padding: 10, paddingRight: 14, borderRadius: 18, borderWidth: 1 },
-  watchIcon: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
-  watchText: { flex: 1, fontFamily: fonts.textBold, fontSize: 14 },
+  watch: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 10, paddingVertical: 7, paddingLeft: 8, paddingRight: 12, borderRadius: 14, borderWidth: 1 },
+  watchIcon: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  watchText: { flex: 1, fontFamily: fonts.textBold, fontSize: 13 },
   toolbar: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, marginTop: 22, marginBottom: 4 },
   rule: { flex: 1, height: StyleSheet.hairlineWidth },
   sizer: { flexDirection: "row", alignItems: "center", borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingHorizontal: 4 },
