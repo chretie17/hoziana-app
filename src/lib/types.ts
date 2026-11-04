@@ -82,6 +82,8 @@ export type AppContent = {
   liveBroadcast: { announced: boolean; videoId: string | null; announcedAt: string | null };
   videos: Video[];
   songs: Song[];
+  /** Added after the first release, so a copy saved before then lacks them. */
+  albums?: Album[];
   updates: UpdatePost[];
   story: {
     history: LocalizedCopy;
@@ -93,4 +95,11 @@ export type AppContent = {
   };
   committee: CommitteeMember[];
   text: Record<LanguageCode, Record<string, string>>;
+};
+
+export type Album = {
+  id: string;
+  title: string;
+  /** A track's slug opens its words in the songbook; null when they are not there. */
+  tracks: { title: string; slug: string | null }[];
 };

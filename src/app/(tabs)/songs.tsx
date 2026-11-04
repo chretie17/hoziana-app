@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, type NativeScrollEvent, type NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { AlbumCover } from "@/components/AlbumCover";
 import { Body, Heading, Kicker, Screen, SearchField, StatusNote } from "@/components/ui";
 import { useContent } from "@/lib/content";
 import { useLanguage } from "@/lib/i18n";
@@ -11,7 +12,7 @@ import { fonts, usePalette, type Palette } from "@/lib/theme";
 import type { Song } from "@/lib/types";
 
 type Filter = "all" | "audio";
-type Order = "number" | "letter";
+type Order = "number" | "letter" | "albums";
 type Section = { letter: string; songs: Song[] };
 
 /** The letter a title files under; numbers and signs go under "#". */
@@ -133,6 +134,7 @@ export default function Songs() {
               options={[
                 { value: "number", label: t.byNumber, icon: "list" },
                 { value: "letter", label: t.byLetter, icon: "text" },
+                { value: "albums", label: t.albums, icon: "disc" },
               ]}
             />
             {withAudio && (
@@ -150,7 +152,9 @@ export default function Songs() {
           <StatusNote />
         </View>
 
-        {songs.length === 0 ? (
+        {order === "albums" ? (
+          <AlbumGrid query={deferred} />
+        ) : songs.length === 0 ? (
           <View style={styles.empty}>
             <View style={[styles.emptyIcon, { backgroundColor: palette.sand }]}><Ionicons name="search" size={26} color={palette.accentDeep} /></View>
             <Heading size={24} style={styles.emptyTitle}>{t.noSong}</Heading>
@@ -191,6 +195,44 @@ export default function Songs() {
   );
 }
 
+/** The albums two to a row; a search keeps those whose name or songs match. */
+function AlbumGrid({ query }: { query: string }) {
+  const { content } = useContent();
+  const { t } = useLanguage();
+  const palette = usePalette();
+  const needle = normalizeSearch(query);
+  const albums = (content.albums ?? [])
+    .map((album, index) => ({ album, index }))
+    .filter(({ album }) => !needle || [album.title, ...album.tracks.map((track) => track.title)].some((field) => normalizeSearch(field).includes(needle)));
+  if (albums.length === 0) {
+    return (
+      <View style={styles.empty}>
+        <Heading size={24} style={styles.emptyTitle}>{t.noSong}</Heading>
+        <Body muted>{t.noSongHelp}</Body>
+      </View>
+    );
+  }
+  return (
+    <View style={styles.albumGrid}>
+      {albums.map(({ album, index }) => (
+        <Pressable
+          key={album.id}
+          onPress={() => router.push({ pathname: "/album/[id]", params: { id: album.id } })}
+          style={({ pressed }) => [styles.albumCard, { backgroundColor: palette.card, borderColor: palette.line }, pressed && { opacity: 0.85 }]}
+          accessibilityRole="button"
+          accessibilityLabel={album.title}
+        >
+          <View style={styles.albumArt}>
+            <AlbumCover album={album} index={index} size={136} />
+          </View>
+          <Text numberOfLines={1} style={[styles.albumTitle, { color: palette.ink }]}>{album.title}</Text>
+          <Text style={[styles.albumCount, { color: palette.muted }]}>{t.albumSongs(album.tracks.length)}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 /** Two choices on one track; the chosen one is lifted out in white. */
 function Segmented<Value extends string>({ palette, value, onChange, options }: {
   palette: Palette;
@@ -211,7 +253,7 @@ function Segmented<Value extends string>({ palette, value, onChange, options }: 
             style={[styles.segment, selected && [styles.segmentSelected, { backgroundColor: palette.onDark }]]}
           >
             <Ionicons name={option.icon} size={14} color={selected ? palette.dark : palette.onDarkMuted} />
-            <Text style={[styles.segmentText, { color: selected ? palette.dark : palette.onDarkMuted }]}>{option.label}</Text>
+            <Text numberOfLines={1} style={[styles.segmentText, { color: selected ? palette.dark : palette.onDarkMuted }]}>{option.label}</Text>
           </Pressable>
         );
       })}
@@ -388,6 +430,11 @@ const styles = StyleSheet.create({
   bubble: { position: "absolute", alignSelf: "center", top: "40%", width: 92, height: 92, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   bubbleText: { fontFamily: fonts.display, fontSize: 52, lineHeight: 58 },
 
+  albumGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, paddingHorizontal: 12 },
+  albumCard: { flexBasis: "47%", flexGrow: 1, padding: 10, paddingBottom: 14, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, gap: 4 },
+  albumArt: { alignItems: "center", marginBottom: 8 },
+  albumTitle: { fontFamily: fonts.display, fontSize: 20, lineHeight: 24, paddingHorizontal: 4 },
+  albumCount: { fontFamily: fonts.text, fontSize: 12.5, paddingHorizontal: 4 },
   empty: { alignItems: "center", paddingHorizontal: 32, paddingTop: 30, gap: 8 },
   emptyIcon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center", marginBottom: 6 },
   emptyTitle: { textAlign: "center" },
