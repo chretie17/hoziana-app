@@ -67,60 +67,145 @@ export default function SongPage() {
     <Screen edges={[]}>
       <Stack.Screen options={{ title: song.order ? `${t.songbook} · ${song.order}` : t.songbook }} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Kicker>{song.status === "awaiting-review" ? t.awaitingReview : t.songbook}</Kicker>
-        <Heading size={34} style={styles.title}>{song.title}</Heading>
-
-        <View style={styles.facts}>
-          {song.key ? <Fact label={t.key} value={song.key} /> : null}
-          {song.bibleReference ? <Fact label={t.scripture} value={song.bibleReference} /> : null}
+        <View style={[styles.hero, { backgroundColor: palette.dark }]}>
+          {song.order ? <Text style={[styles.heroNumber, { color: palette.darkSoft }]} accessible={false}>{song.order}</Text> : null}
+          <Kicker light>{song.status === "awaiting-review" ? t.awaitingReview : song.order ? `${t.songbook} · ${String(song.order).padStart(2, "0")}` : t.songbook}</Kicker>
+          <Heading light size={34} style={styles.title}>{song.title}</Heading>
+          <View style={styles.facts}>
+            {song.key ? <Fact icon="musical-note" label={t.key} value={song.key} /> : null}
+            {song.bibleReference ? <Fact icon="book-outline" label={t.scripture} value={song.bibleReference} /> : null}
+          </View>
+          {song.audioUrl ? <SongAudio song={song} /> : null}
+          {song.videoId ? (
+            <Pressable
+              onPress={() => router.push({ pathname: "/video/[id]", params: { id: song.videoId as string } })}
+              style={({ pressed }) => [styles.watch, { borderColor: palette.darkSoft }, pressed && { backgroundColor: "rgba(255,255,255,0.08)" }]}
+              accessibilityRole="button"
+            >
+              <View style={[styles.watchIcon, { backgroundColor: palette.accent }]}><Ionicons name="play" size={14} color={palette.dark} style={{ marginLeft: 2 }} /></View>
+              <Text style={[styles.watchText, { color: palette.onDark }]}>{t.watchRecording}</Text>
+              <Ionicons name="chevron-forward" size={16} color={palette.onDarkMuted} />
+            </Pressable>
+          ) : null}
         </View>
 
-        {song.audioUrl ? <SongAudio song={song} /> : null}
-        {song.videoId ? (
-          <Button label={t.watchRecording} icon="logo-youtube" tone="dark" onPress={() => router.push({ pathname: "/video/[id]", params: { id: song.videoId as string } })} style={styles.watch} />
-        ) : null}
-
-        <View style={[styles.sizer, { borderColor: palette.line }]}>
-          <Text style={[styles.sizerLabel, { color: palette.muted }]}>{t.textSize}</Text>
-          <Pressable onPress={() => changeSize(-1)} disabled={sizeIndex === 0} hitSlop={8} style={[styles.sizeButton, { borderColor: palette.line, opacity: sizeIndex === 0 ? 0.35 : 1 }]} accessibilityRole="button" accessibilityLabel={`${t.textSize} −`}>
-            <Text style={[styles.sizeSmall, { color: palette.ink }]}>A</Text>
-          </Pressable>
-          <Pressable onPress={() => changeSize(1)} disabled={sizeIndex === sizes.length - 1} hitSlop={8} style={[styles.sizeButton, { borderColor: palette.line, opacity: sizeIndex === sizes.length - 1 ? 0.35 : 1 }]} accessibilityRole="button" accessibilityLabel={`${t.textSize} +`}>
-            <Text style={[styles.sizeLarge, { color: palette.ink }]}>A</Text>
-          </Pressable>
+        <View style={styles.toolbar}>
+          <View style={[styles.rule, { backgroundColor: palette.line }]} />
+          <View style={[styles.sizer, { backgroundColor: palette.card, borderColor: palette.line }]} accessibilityLabel={t.textSize}>
+            <Pressable onPress={() => changeSize(-1)} disabled={sizeIndex === 0} hitSlop={6} style={[styles.sizeButton, { opacity: sizeIndex === 0 ? 0.3 : 1 }]} accessibilityRole="button" accessibilityLabel={`${t.textSize} −`}>
+              <Text style={[styles.sizeSmall, { color: palette.ink }]}>A</Text>
+            </Pressable>
+            <View style={[styles.sizerDivider, { backgroundColor: palette.line }]} />
+            <Pressable onPress={() => changeSize(1)} disabled={sizeIndex === sizes.length - 1} hitSlop={6} style={[styles.sizeButton, { opacity: sizeIndex === sizes.length - 1 ? 0.3 : 1 }]} accessibilityRole="button" accessibilityLabel={`${t.textSize} +`}>
+              <Text style={[styles.sizeLarge, { color: palette.ink }]}>A</Text>
+            </Pressable>
+          </View>
         </View>
 
-        {song.paragraphs.map((paragraph, stanza) => (
-          <Text key={stanza} selectable style={[styles.stanza, { fontSize, lineHeight: Math.round(fontSize * 1.55), color: palette.ink }]}>
-            {paragraph}
-          </Text>
-        ))}
+        {song.paragraphs.map((paragraph, stanza) => <Stanza key={stanza} text={paragraph} fontSize={fontSize} />)}
 
         <View style={styles.pager}>
-          {previous ? (
-            <Pressable style={[styles.pageLink, { borderColor: palette.line }]} onPress={() => router.replace({ pathname: "/song/[slug]", params: { slug: previous.slug } })} accessibilityRole="button">
-              <Text style={[styles.pageHint, { color: palette.muted }]}>← {t.previousSong}</Text>
-              <Text numberOfLines={2} style={[styles.pageTitle, { color: palette.ink }]}>{previous.title}</Text>
-            </Pressable>
-          ) : <View style={styles.pageSpacer} />}
-          {next ? (
-            <Pressable style={[styles.pageLink, styles.pageNext, { borderColor: palette.line }]} onPress={() => router.replace({ pathname: "/song/[slug]", params: { slug: next.slug } })} accessibilityRole="button">
-              <Text style={[styles.pageHint, { color: palette.muted }]}>{t.nextSong} →</Text>
-              <Text numberOfLines={2} style={[styles.pageTitle, styles.right, { color: palette.ink }]}>{next.title}</Text>
-            </Pressable>
-          ) : <View style={styles.pageSpacer} />}
+          {previous ? <PageLink song={previous} hint={t.previousSong} direction="previous" /> : <View style={styles.pageSpacer} />}
+          {next ? <PageLink song={next} hint={t.nextSong} direction="next" /> : <View style={styles.pageSpacer} />}
         </View>
       </ScrollView>
     </Screen>
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+// The songbook marks who sings a line ("Gore:", "Gabo:", "Bose:"…), numbers
+// its verses with Roman numerals ("II.") and marks repeats with "/2".
+const VERSE = /^(I{1,3}|IV|V|VI{1,3}|IX|X)\.\s*/;
+const PART = /^((?:(?:I{1,3}|IV|V)\.\s*)?(?:Bose|Gabo|Gore|Basse|Mume|Mke|Solo|Alto|Soprano|Tenor))\s*:\s*/i;
+const REPEAT = /\s*\/\s*(\d+)/g;
+
+/** One verse: its numeral in the margin, each line with who sings it, repeats as ×2. */
+function Stanza({ text, fontSize }: { text: string; fontSize: number }) {
+  const palette = usePalette();
+  const verse = VERSE.exec(text.trim());
+  const body = verse && !PART.test(text.trim()) ? text.trim().slice(verse[0].length) : text.trim();
+  const lineHeight = Math.round(fontSize * 1.55);
+  return (
+    <View style={styles.stanza}>
+      <View style={styles.gutter}>
+        {verse ? (
+          <Text style={[styles.verseNumber, { color: palette.accentDeep }]}>{verse[1]}</Text>
+        ) : (
+          <View style={[styles.gutterBar, { backgroundColor: palette.accentSoft }]} />
+        )}
+      </View>
+      <View style={styles.lines}>
+        {body.split("\n").map((raw, index) => {
+          const line = raw.trim();
+          if (!line) return null;
+          const part = PART.exec(line);
+          const words = part ? line.slice(part[0].length) : line;
+          return (
+            <View key={index} style={styles.line}>
+              {part ? <PartTag name={part[1]} fontSize={fontSize} /> : null}
+              <Text selectable style={[styles.lyric, { fontSize, lineHeight, color: palette.ink }]}>
+                {withRepeats(words, palette.accentDeep, fontSize)}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+function withRepeats(text: string, color: string, fontSize: number) {
+  const pieces: (string | React.ReactElement)[] = [];
+  let last = 0;
+  for (const match of text.matchAll(REPEAT)) {
+    pieces.push(text.slice(last, match.index));
+    pieces.push(<Text key={match.index} style={[styles.repeat, { color, fontSize: Math.max(12, fontSize * 0.72) }]}>{`  ×${match[1]}`}</Text>);
+    last = (match.index ?? 0) + match[0].length;
+  }
+  pieces.push(text.slice(last));
+  return pieces;
+}
+
+/** Who sings the line, as a small tag: all together filled, women and men in two tones. */
+function PartTag({ name, fontSize }: { name: string; fontSize: number }) {
+  const palette = usePalette();
+  const key = name.replace(/^[IVX]+\.\s*/, "").toLowerCase();
+  const look =
+    key === "bose" ? { backgroundColor: palette.accentDeep, color: "#fff", borderColor: palette.accentDeep }
+    : key === "gore" || key === "mke" ? { backgroundColor: palette.accentSoft, color: palette.accentDeep, borderColor: palette.accentSoft }
+    : key === "gabo" || key === "mume" ? { backgroundColor: palette.sand, color: palette.ink, borderColor: palette.line }
+    : { backgroundColor: "transparent", color: palette.muted, borderColor: palette.line };
+  return (
+    <View style={[styles.part, { backgroundColor: look.backgroundColor, borderColor: look.borderColor, marginTop: Math.max(0, (Math.round(fontSize * 1.55) - 22) / 2) }]}>
+      <Text style={[styles.partText, { color: look.color }]}>{name}</Text>
+    </View>
+  );
+}
+
+function PageLink({ song, hint, direction }: { song: Song; hint: string; direction: "previous" | "next" }) {
+  const palette = usePalette();
+  const next = direction === "next";
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.pageLink, next && styles.pageNext, { backgroundColor: palette.card, borderColor: palette.line }, pressed && { backgroundColor: palette.sand }]}
+      onPress={() => router.replace({ pathname: "/song/[slug]", params: { slug: song.slug } })}
+      accessibilityRole="button"
+    >
+      <View style={[styles.pageHintRow, next && styles.reverse]}>
+        <Ionicons name={next ? "arrow-forward" : "arrow-back"} size={13} color={palette.accentDeep} />
+        <Text style={[styles.pageHint, { color: palette.muted }]}>{hint}{song.order ? ` · ${String(song.order).padStart(2, "0")}` : ""}</Text>
+      </View>
+      <Text numberOfLines={2} style={[styles.pageTitle, next && styles.right, { color: palette.ink }]}>{song.title}</Text>
+    </Pressable>
+  );
+}
+
+function Fact({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
   const palette = usePalette();
   return (
-    <View style={[styles.fact, { backgroundColor: palette.sand }]}>
-      <Text style={[styles.factLabel, { color: palette.muted }]}>{label}</Text>
-      <Text style={[styles.factValue, { color: palette.ink }]}>{value}</Text>
+    <View style={[styles.fact, { borderColor: palette.darkSoft }]} accessibilityLabel={`${label}: ${value}`}>
+      <Ionicons name={icon} size={14} color={palette.accent} />
+      <Text style={[styles.factValue, { color: palette.onDark }]}>{value}</Text>
     </View>
   );
 }
@@ -138,7 +223,7 @@ function SongAudio({ song }: { song: Song }) {
   const known = Number.isFinite(duration) && duration > 0;
 
   return (
-    <View style={[styles.audio, { backgroundColor: palette.dark }]}>
+    <View style={[styles.audio, { backgroundColor: "rgba(255,255,255,0.06)", borderColor: palette.darkSoft }]}>
       <Pressable
         onPress={() => toggle({ slug: song.slug, title: song.title, url: song.audioUrl as string })}
         style={[styles.audioButton, { backgroundColor: palette.accent }]}
@@ -169,33 +254,49 @@ function SongAudio({ song }: { song: Song }) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 40 },
+  content: { paddingBottom: 48 },
   missing: { padding: 24, gap: 16 },
-  title: { marginTop: 10 },
+  hero: { margin: 12, marginBottom: 0, padding: 20, paddingTop: 22, borderRadius: 26, overflow: "hidden" },
+  heroNumber: { position: "absolute", right: 14, top: -6, fontFamily: fonts.display, fontSize: 120, lineHeight: 130, opacity: 0.55 },
+  title: { marginTop: 8, paddingRight: 40 },
   facts: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
-  fact: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  factLabel: { fontFamily: fonts.textBold, fontSize: 10, letterSpacing: 1, textTransform: "uppercase" },
-  factValue: { fontFamily: fonts.textMedium, fontSize: 14, marginTop: 2 },
-  audio: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 20, padding: 14, borderRadius: 16 },
-  audioButton: { width: 54, height: 54, borderRadius: 27, alignItems: "center", justifyContent: "center" },
+  fact: { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 12, height: 34, borderRadius: 17, borderWidth: 1 },
+  factValue: { fontFamily: fonts.textMedium, fontSize: 13.5 },
+  audio: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 18, padding: 12, borderRadius: 18, borderWidth: 1 },
+  audioButton: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
   audioBody: { flex: 1 },
-  audioLabel: { fontFamily: fonts.textBold, fontSize: 11, letterSpacing: 1, textTransform: "uppercase" },
-  track: { height: 28, justifyContent: "center" },
+  audioLabel: { fontFamily: fonts.textBold, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase" },
+  track: { height: 26, justifyContent: "center" },
   trackLine: { height: 4, borderRadius: 2, overflow: "hidden" },
   trackFill: { height: 4 },
   audioTime: { color: "#ffffffb0", fontFamily: fonts.text, fontSize: 12 },
-  watch: { marginTop: 12 },
-  sizer: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 22, marginBottom: 6, paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1 },
-  sizerLabel: { flex: 1, fontFamily: fonts.textMedium, fontSize: 13 },
-  sizeButton: { width: 44, height: 40, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  sizeSmall: { fontFamily: fonts.textBold, fontSize: 13 },
-  sizeLarge: { fontFamily: fonts.textBold, fontSize: 19 },
-  stanza: { fontFamily: fonts.text, marginTop: 20 },
-  pager: { flexDirection: "row", gap: 10, marginTop: 36 },
-  pageLink: { flex: 1, padding: 14, borderWidth: 1, borderRadius: 14 },
+  watch: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, padding: 10, paddingRight: 14, borderRadius: 18, borderWidth: 1 },
+  watchIcon: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  watchText: { flex: 1, fontFamily: fonts.textBold, fontSize: 14 },
+  toolbar: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, marginTop: 22, marginBottom: 4 },
+  rule: { flex: 1, height: StyleSheet.hairlineWidth },
+  sizer: { flexDirection: "row", alignItems: "center", borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingHorizontal: 4 },
+  sizerDivider: { width: StyleSheet.hairlineWidth, height: 18 },
+  sizeButton: { width: 42, height: 36, alignItems: "center", justifyContent: "center" },
+  sizeSmall: { fontFamily: fonts.display, fontSize: 15 },
+  sizeLarge: { fontFamily: fonts.display, fontSize: 22 },
+  stanza: { flexDirection: "row", paddingLeft: 8, paddingRight: 20, marginTop: 22 },
+  gutter: { width: 40, alignItems: "center", paddingTop: 4 },
+  verseNumber: { fontFamily: fonts.display, fontSize: 20, lineHeight: 24 },
+  gutterBar: { width: 3, flex: 1, borderRadius: 2, minHeight: 24 },
+  lines: { flex: 1, gap: 3 },
+  line: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  lyric: { flex: 1, fontFamily: fonts.text },
+  repeat: { fontFamily: fonts.textBold },
+  part: { height: 22, paddingHorizontal: 8, borderRadius: 6, borderWidth: 1, justifyContent: "center", minWidth: 46, alignItems: "center" },
+  partText: { fontFamily: fonts.textBold, fontSize: 10.5, letterSpacing: 0.6, textTransform: "uppercase" },
+  pager: { flexDirection: "row", gap: 10, marginTop: 40, paddingHorizontal: 12 },
+  pageLink: { flex: 1, padding: 14, borderWidth: StyleSheet.hairlineWidth, borderRadius: 18, gap: 6 },
   pageNext: { alignItems: "flex-end" },
   pageSpacer: { flex: 1 },
+  pageHintRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  reverse: { flexDirection: "row-reverse" },
   pageHint: { fontFamily: fonts.textMedium, fontSize: 12 },
-  pageTitle: { fontFamily: fonts.textBold, fontSize: 13.5, marginTop: 4 },
+  pageTitle: { fontFamily: fonts.textBold, fontSize: 13.5 },
   right: { textAlign: "right" },
 });
