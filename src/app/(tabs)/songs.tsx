@@ -75,11 +75,11 @@ export default function Songs() {
   const offsets = useRef<Record<string, number>>({});
   const headingHeight = useRef(0);
   const [active, setActive] = useState("");
-  const jumpTo = (letter: string) => {
+  const jumpTo = (letter: string, animated: boolean) => {
     const y = offsets.current[letter];
     if (y === undefined) return;
     setActive(letter);
-    scrollRef.current?.scrollTo({ y: Math.max(0, y - headingHeight.current), animated: true });
+    scrollRef.current?.scrollTo({ y: Math.max(0, y - headingHeight.current), animated });
   };
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (order !== "letter") return;
@@ -214,38 +214,65 @@ function Segmented<Value extends string>({ palette, value, onChange, options }: 
 }
 
 /**
- * The letters down the right edge, on a floating rail: the letter being read
- * is filled in, and a tapped letter is shown large in the middle of the
- * screen for a moment, as the phone's own contacts do.
+ * The letters down the right edge, on a floating rail, as the phone's own
+ * contacts have them: tap a letter, or hold the rail and slide along it, and
+ * the list follows letter by letter while the letter shows large mid-screen.
+ * The letter being read is filled in.
  */
-function LetterRail({ palette, letters, active, onPick }: { palette: Palette; letters: string[]; active: string; onPick: (letter: string) => void }) {
+function LetterRail({ palette, letters, active, onPick }: { palette: Palette; letters: string[]; active: string; onPick: (letter: string, animated: boolean) => void }) {
   const [shown, setShown] = useState("");
+  const [dragging, setDragging] = useState(false);
   const [fade] = useState(() => new Animated.Value(0));
+  const railRef = useRef<View>(null);
+  const railTop = useRef(0);
+  const last = useRef("");
+
   useEffect(() => {
     if (!shown) return;
     fade.setValue(1);
+    if (dragging) return;
     const animation = Animated.timing(fade, { toValue: 0, duration: 450, delay: 450, easing: Easing.out(Easing.quad), useNativeDriver: true });
     animation.start(({ finished }) => finished && setShown(""));
     return () => animation.stop();
-  }, [shown, fade]);
+  }, [shown, dragging, fade]);
+
+  const measure = () => railRef.current?.measureInWindow((_, y) => { railTop.current = y; });
+  const pickAt = (pageY: number, animated: boolean) => {
+    const index = Math.min(letters.length - 1, Math.max(0, Math.floor((pageY - railTop.current - RAIL_PADDING) / RAIL_LETTER)));
+    const letter = letters[index];
+    if (!letter || letter === last.current) return;
+    last.current = letter;
+    onPick(letter, animated);
+    setShown(letter);
+  };
+  const release = () => {
+    setDragging(false);
+    last.current = "";
+  };
 
   return (
     <>
       <View style={styles.railWrap} pointerEvents="box-none">
-        <View style={[styles.rail, { backgroundColor: palette.card, borderColor: palette.line }]}>
+        <View
+          ref={railRef}
+          onLayout={measure}
+          onStartShouldSetResponder={() => true}
+          onMoveShouldSetResponder={() => true}
+          onResponderTerminationRequest={() => false}
+          onResponderGrant={(event) => { measure(); setDragging(true); last.current = ""; pickAt(event.nativeEvent.pageY, true); }}
+          onResponderMove={(event) => pickAt(event.nativeEvent.pageY, false)}
+          onResponderRelease={release}
+          onResponderTerminate={release}
+          accessibilityRole="adjustable"
+          accessibilityLabel={letters.join(" ")}
+          style={[styles.rail, { backgroundColor: palette.card, borderColor: dragging ? palette.accentDeep : palette.line }, dragging && styles.railActive]}
+        >
           {letters.map((letter) => {
-            const on = letter === active;
+            const on = letter === (dragging && shown ? shown : active);
             return (
-              <Pressable
-                key={letter}
-                onPress={() => { onPick(letter); setShown(letter); }}
-                hitSlop={{ left: 14, right: 6, top: 1, bottom: 1 }}
-                accessibilityRole="button"
-                accessibilityLabel={letter}
-                style={[styles.railLetter, on && { backgroundColor: palette.accentDeep }]}
-              >
+              <View key={letter} pointerEvents="none" style={[styles.railLetter, on && { backgroundColor: palette.accentDeep }]}>
                 <Text style={[styles.railLetterText, { color: on ? "#fff" : palette.accentDeep }]}>{letter}</Text>
-              </Pressable>
+              </View>
             );
           })}
         </View>
@@ -258,6 +285,10 @@ function LetterRail({ palette, letters, active, onPick }: { palette: Palette; le
     </>
   );
 }
+
+/** Each letter's height on the rail, and the rail's padding above the first. */
+const RAIL_LETTER = 18;
+const RAIL_PADDING = 6;
 
 const SongRow = memo(function SongRow({ song, first }: { song: Song; first: boolean }) {
   const palette = usePalette();
@@ -344,9 +375,10 @@ const styles = StyleSheet.create({
   mediaDot: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
 
   railWrap: { position: "absolute", right: 4, top: 0, bottom: 0, justifyContent: "center" },
-  rail: { paddingVertical: 6, paddingHorizontal: 2, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  railLetter: { width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  railLetterText: { fontFamily: fonts.textBold, fontSize: 10, lineHeight: 12 },
+  railActive: { transform: [{ scale: 1.06 }] },
+  rail: { paddingVertical: RAIL_PADDING, paddingHorizontal: 4, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
+  railLetter: { width: RAIL_LETTER, height: RAIL_LETTER, borderRadius: RAIL_LETTER / 2, alignItems: "center", justifyContent: "center" },
+  railLetterText: { fontFamily: fonts.textBold, fontSize: 10, lineHeight: 12, userSelect: "none" },
   bubble: { position: "absolute", alignSelf: "center", top: "40%", width: 92, height: 92, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   bubbleText: { fontFamily: fonts.display, fontSize: 52, lineHeight: 58 },
 
