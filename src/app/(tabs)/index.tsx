@@ -15,6 +15,10 @@ import { fonts, usePalette } from "@/lib/theme";
 import type { Song } from "@/lib/types";
 
 const helpFile = "help-seen.txt";
+const stagePhoto = require("../../../assets/images/choir-stage.jpg");
+// A fade from the photo into the panel's dark, drawn as bands so it needs no
+// gradient library and looks the same on phones and in the browser.
+const fade = [0, 0.04, 0.1, 0.18, 0.28, 0.4, 0.53, 0.66, 0.78, 0.88, 0.95, 1];
 
 /** Morning until noon, afternoon until six, evening after. */
 function partOfDay(): 0 | 1 | 2 {
@@ -172,7 +176,17 @@ function FindSong({ songs }: { songs: Song[] }) {
 
   return (
     <View style={[styles.find, { backgroundColor: palette.dark }]}>
-      <Heading light size={30}>{t.findSong}</Heading>
+      <View style={styles.photo}>
+        <Image source={stagePhoto} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: "30%" }} transition={300} accessibilityIgnoresInvertColors />
+        <View style={styles.fade} pointerEvents="none">
+          {fade.map((opacity, index) => <View key={index} style={[styles.fadeBand, { backgroundColor: palette.dark, opacity }]} />)}
+        </View>
+        <View style={styles.photoTag}>
+          <View style={[styles.photoDot, { backgroundColor: palette.accent }]} />
+          <Text style={styles.photoTagText}>Hoziana Choir · ADEPR Nyarugenge</Text>
+        </View>
+      </View>
+      <Heading light size={30} style={styles.findTitle}>{t.findSong}</Heading>
       <View style={[styles.findField, { backgroundColor: palette.card }]}>
         <Ionicons name="search" size={22} color={palette.accentDeep} />
         <TextInput
@@ -347,7 +361,14 @@ const styles = StyleSheet.create({
   liveTitle: { color: "#fff", fontFamily: fonts.textBold, fontSize: 16 },
   liveBody: { color: "#ffffffd0", fontFamily: fonts.text, fontSize: 14, marginTop: 2 },
 
-  find: { marginHorizontal: 12, padding: 18, paddingTop: 20, borderRadius: 26, gap: 14 },
+  find: { marginHorizontal: 12, padding: 18, paddingTop: 0, borderRadius: 26, gap: 14, overflow: "hidden" },
+  photo: { height: 230, marginHorizontal: -18, marginBottom: -54 },
+  fade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 120 },
+  fadeBand: { flex: 1 },
+  photoTag: { position: "absolute", top: 14, left: 14, flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 11, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.42)" },
+  photoDot: { width: 7, height: 7, borderRadius: 4 },
+  photoTagText: { color: "#fff", fontFamily: fonts.textBold, fontSize: 11, letterSpacing: 0.3 },
+  findTitle: { textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 12 },
   findField: { flexDirection: "row", alignItems: "center", gap: 10, height: 58, paddingHorizontal: 16, borderRadius: 16 },
   findInput: { flex: 1, minWidth: 0, height: "100%", fontFamily: fonts.textMedium, fontSize: 17, outlineWidth: 0 },
   results: { borderRadius: 16, overflow: "hidden" },
