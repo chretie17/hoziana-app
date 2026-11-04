@@ -60,6 +60,10 @@ export default function SongPage() {
   }
 
   const fontSize = sizes[sizeIndex];
+  // Every album the song is on, and where on it.
+  const onAlbums = (content.albums ?? []).flatMap((album) =>
+    album.tracks.flatMap((entry, position) => (entry.slug === song.slug ? [{ album, track: position + 1 }] : [])),
+  );
   const previous = ordered[index - 1];
   const next = ordered[index + 1];
 
@@ -75,6 +79,26 @@ export default function SongPage() {
             {song.key ? <Fact icon="musical-note" label={t.key} value={song.key} /> : null}
             {song.bibleReference ? <Fact icon="book-outline" label={t.scripture} value={song.bibleReference} /> : null}
           </View>
+          {onAlbums.length > 0 ? (
+            <View style={styles.albums}>
+              <Text style={[styles.albumsLabel, { color: palette.onDarkMuted }]}>{t.albums}</Text>
+              <View style={styles.facts}>
+                {onAlbums.map(({ album, track }) => (
+                  <Pressable
+                    key={album.id}
+                    onPress={() => router.push({ pathname: "/album/[id]", params: { id: album.id } })}
+                    style={({ pressed }) => [styles.fact, { borderColor: palette.darkSoft }, pressed && { backgroundColor: "rgba(255,255,255,0.1)" }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${album.title}, ${track}`}
+                  >
+                    <Ionicons name="disc" size={14} color={palette.accent} />
+                    <Text style={[styles.factValue, { color: palette.onDark }]}>{album.title}</Text>
+                    <Text style={[styles.albumTrack, { color: palette.onDarkMuted }]}>#{track}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
           {song.audioUrl ? <SongAudio song={song} /> : null}
           {song.videoId ? (
             <Pressable
@@ -262,6 +286,9 @@ const styles = StyleSheet.create({
   facts: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
   fact: { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 12, height: 34, borderRadius: 17, borderWidth: 1 },
   factValue: { fontFamily: fonts.textMedium, fontSize: 13.5 },
+  albums: { marginTop: 14, gap: 0 },
+  albumsLabel: { fontFamily: fonts.textBold, fontSize: 10.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: -6 },
+  albumTrack: { fontFamily: fonts.textBold, fontSize: 11.5 },
   audio: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 18, padding: 12, borderRadius: 18, borderWidth: 1 },
   audioButton: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
   audioBody: { flex: 1 },
