@@ -9,7 +9,7 @@ import { languages, useLanguage } from "@/lib/i18n";
 import { useContent } from "@/lib/content";
 import { usePlayer } from "@/lib/player";
 import { useRecents } from "@/lib/recents";
-import { normalizeSearch } from "@/lib/search";
+import { lyricsMatch, normalizeSearch } from "@/lib/search";
 import { readText, writeText } from "@/lib/storage";
 import { fonts, usePalette } from "@/lib/theme";
 import type { Song } from "@/lib/types";
@@ -161,9 +161,12 @@ function FindSong({ songs }: { songs: Song[] }) {
       number !== null
         ? String(song.order ?? "").startsWith(needle)
         : [song.title, song.bibleReference ?? ""].some((field) => normalizeSearch(field).includes(needle)),
-    );
-    return found.sort((a, b) => (number !== null && a.order === number ? -1 : number !== null && b.order === number ? 1 : (a.order ?? 9999) - (b.order ?? 9999)));
-  }, [songs, needle, number]);
+    ).sort((a, b) => (number !== null && a.order === number ? -1 : number !== null && b.order === number ? 1 : (a.order ?? 9999) - (b.order ?? 9999)));
+    // Then songs whose words hold what was typed, a remembered line.
+    if (number !== null) return found;
+    const named = new Set(found);
+    return [...found, ...songs.filter((song) => !named.has(song) && lyricsMatch(song, value) !== null).sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999))];
+  }, [songs, needle, number, value]);
 
   const submit = () => {
     if (matches.length === 1 || (number !== null && matches[0]?.order === number)) {
@@ -215,7 +218,7 @@ function FindSong({ songs }: { songs: Song[] }) {
               <Text style={[styles.noResultHelp, { color: palette.muted }]}>{t.noSongHelp}</Text>
             </View>
           ) : (
-            matches.slice(0, 5).map((song, index) => <SongLine key={song.slug} song={song} first={index === 0} onOpen={() => setValue("")} />)
+            matches.slice(0, 5).map((song, index) => <SongLine key={song.slug} song={song} first={index === 0} query={value} onOpen={() => setValue("")} />)
           )}
           {matches.length > 5 ? (
             <Pressable onPress={submit} style={[styles.seeAll, { borderTopColor: palette.line }]} accessibilityRole="button">
@@ -284,8 +287,10 @@ function Tile({ icon, label, detail, onPress, strong = false }: { icon: IconName
 }
 
 /** A song as one easy line: its number, its name, and an arrow. */
-function SongLine({ song, first, onOpen }: { song: Song; first: boolean; onOpen?: () => void }) {
+function SongLine({ song, first, query = "", onOpen }: { song: Song; first: boolean; query?: string; onOpen?: () => void }) {
   const palette = usePalette();
+  // Found by its words rather than its title: the line that matched is shown.
+  const sungLine = query.trim() && !/^\d+$/.test(query.trim()) && !normalizeSearch(song.title).includes(normalizeSearch(query)) ? lyricsMatch(song, query) : null;
   return (
     <Pressable
       onPress={() => { onOpen?.(); openSong(song.slug); }}
@@ -294,7 +299,10 @@ function SongLine({ song, first, onOpen }: { song: Song; first: boolean; onOpen?
       accessibilityLabel={song.title}
     >
       <Text style={[styles.lineNumber, { color: palette.accentDeep }]}>{song.order ? String(song.order).padStart(2, "0") : "—"}</Text>
-      <Text numberOfLines={1} style={[styles.lineTitle, { color: palette.ink }]}>{song.title}</Text>
+      <View style={styles.lineText}>
+        <Text numberOfLines={1} style={[styles.lineTitle, { color: palette.ink }]}>{song.title}</Text>
+        {sungLine ? <Text numberOfLines={1} style={[styles.sungLine, { color: palette.accentDeep }]}>“{sungLine}”</Text> : null}
+      </View>
       {song.audioUrl ? <Ionicons name="headset" size={16} color={palette.accentDeep} /> : null}
       <Ionicons name="chevron-forward" size={18} color={palette.muted} />
     </Pressable>
@@ -399,7 +407,9 @@ const styles = StyleSheet.create({
   list: { borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
   line: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 58, paddingHorizontal: 16 },
   lineNumber: { width: 34, fontFamily: fonts.display, fontSize: 21, fontVariant: ["tabular-nums"] },
-  lineTitle: { flex: 1, fontFamily: fonts.textBold, fontSize: 15 },
+  lineText: { flex: 1, gap: 2, paddingVertical: 8 },
+  lineTitle: { fontFamily: fonts.textBold, fontSize: 15 },
+  sungLine: { fontFamily: fonts.displayItalic, fontSize: 14 },
 
   today: { padding: 18, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, gap: 14 },
   todayHead: { flexDirection: "row", alignItems: "center", gap: 14 },
