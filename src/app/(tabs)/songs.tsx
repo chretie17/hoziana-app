@@ -7,7 +7,7 @@ import { AlbumCover } from "@/components/AlbumCover";
 import { Body, Heading, Kicker, Screen, SearchField, StatusNote } from "@/components/ui";
 import { useContent } from "@/lib/content";
 import { useLanguage } from "@/lib/i18n";
-import { normalizeSearch } from "@/lib/search";
+import { lyricsMatch, normalizeSearch } from "@/lib/search";
 import { fonts, usePalette, type Palette } from "@/lib/theme";
 import type { Song } from "@/lib/types";
 
@@ -52,13 +52,18 @@ export default function Songs() {
   );
   const withAudio = ordered.some((song) => song.audioUrl);
 
+  // Titles, keys, verses and numbers first; then songs whose words hold
+  // what was typed — a line someone remembers without knowing the title.
   const songs = useMemo(() => {
     const needle = normalizeSearch(deferred);
-    return ordered.filter((song) => {
-      if (filter === "audio" && !song.audioUrl) return false;
-      if (!needle) return true;
-      return [song.title, song.key ?? "", song.bibleReference ?? "", String(song.order ?? "")].some((field) => normalizeSearch(field).includes(needle));
-    });
+    const named: Song[] = [], sung: Song[] = [];
+    for (const song of ordered) {
+      if (filter === "audio" && !song.audioUrl) continue;
+      if (!needle) { named.push(song); continue; }
+      if ([song.title, song.key ?? "", song.bibleReference ?? "", String(song.order ?? "")].some((field) => normalizeSearch(field).includes(needle))) named.push(song);
+      else if (lyricsMatch(song, deferred) !== null) sung.push(song);
+    }
+    return [...named, ...sung];
   }, [ordered, deferred, filter]);
 
   // A–Z: a group under each letter, "#" last.
@@ -162,7 +167,7 @@ export default function Songs() {
           </View>
         ) : order === "number" ? (
           <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.line }]}>
-            {songs.map((song, index) => <SongRow key={song.slug} song={song} first={index === 0} />)}
+            {songs.map((song, index) => <SongRow key={song.slug} song={song} first={index === 0} query={deferred} />)}
           </View>
         ) : (
           sections.flatMap((section) => [
@@ -182,7 +187,7 @@ export default function Songs() {
               onLayout={(event) => { offsets.current[section.letter] = event.nativeEvent.layout.y; }}
               style={[styles.card, styles.letterCard, { backgroundColor: palette.card, borderColor: palette.line }]}
             >
-              {section.songs.map((song, index) => <SongRow key={song.slug} song={song} first={index === 0} />)}
+              {section.songs.map((song, index) => <SongRow key={song.slug} song={song} first={index === 0} query={deferred} />)}
             </View>,
           ])
         )}
@@ -338,10 +343,12 @@ function LetterRail({ palette, letters, active, onPick }: { palette: Palette; le
 const RAIL_LETTER = 18;
 const RAIL_PADDING = 6;
 
-const SongRow = memo(function SongRow({ song, first }: { song: Song; first: boolean }) {
+const SongRow = memo(function SongRow({ song, first, query = "" }: { song: Song; first: boolean; query?: string }) {
   const palette = usePalette();
   const { t } = useLanguage();
   const number = song.order ? String(song.order).padStart(2, "0") : "—";
+  // Found by its words rather than its title: the line that matched is shown.
+  const sungLine = query.trim() && !normalizeSearch(song.title).includes(normalizeSearch(query)) ? lyricsMatch(song, query) : null;
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/song/[slug]", params: { slug: song.slug } })}
@@ -355,7 +362,12 @@ const SongRow = memo(function SongRow({ song, first }: { song: Song; first: bool
       <View style={[styles.numberRule, { backgroundColor: palette.line }]} />
       <View style={styles.rowText}>
         <Text numberOfLines={1} style={[styles.songTitle, { color: palette.ink }]}>{song.title}</Text>
-        <View style={styles.metaRow}>
+        {sungLine ? (
+          <View style={styles.metaItem}>
+            <Ionicons name="musical-notes" size={11} color={palette.accentDeep} />
+            <Text numberOfLines={1} style={[styles.sungLine, { color: palette.accentDeep }]}>“{sungLine}”</Text>
+          </View>
+        ) : <View style={styles.metaRow}>
           {song.key ? (
             <View style={styles.metaItem}>
               <Ionicons name="musical-note" size={11} color={palette.muted} />
@@ -369,7 +381,7 @@ const SongRow = memo(function SongRow({ song, first }: { song: Song; first: bool
             </View>
           ) : null}
           {song.status === "awaiting-review" ? <Text style={[styles.meta, { color: palette.muted }]}>{t.awaitingReview}</Text> : null}
-        </View>
+        </View>}
       </View>
       <View style={styles.badges}>
         {song.audioUrl ? (
@@ -418,6 +430,7 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   metaShrink: { flexShrink: 1 },
+  sungLine: { flexShrink: 1, fontFamily: fonts.displayItalic, fontSize: 14 },
   meta: { fontFamily: fonts.text, fontSize: 12 },
   badges: { flexDirection: "row", alignItems: "center", gap: 6, marginLeft: 8 },
   mediaDot: { width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
