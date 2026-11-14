@@ -4,7 +4,9 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { EventCard } from "@/components/EventCard";
 import { Heading, Kicker, Screen, StatusNote, type IconName } from "@/components/ui";
+import { upcomingEvents } from "@/lib/events";
 import { languages, useLanguage } from "@/lib/i18n";
 import { useContent } from "@/lib/content";
 import { usePlayer } from "@/lib/player";
@@ -58,6 +60,7 @@ export default function Home() {
   const recentSongs = recent.map((slug) => bySlug.get(slug)).filter((song): song is Song => Boolean(song)).slice(0, 6);
   const withAudio = content.songs.filter((song) => song.audioUrl).length;
   const live = liveBroadcast.announced && liveBroadcast.videoId;
+  const nextEvent = upcomingEvents(content.events)[0];
 
   return (
     <Screen>
@@ -93,6 +96,13 @@ export default function Home() {
         <FindSong songs={content.songs} />
         <StatusNote />
         <Help />
+
+        {nextEvent ? (
+          <View style={styles.section}>
+            <Kicker style={styles.sectionKicker}>{t.nextEvent}</Kicker>
+            <EventCard event={nextEvent} large />
+          </View>
+        ) : null}
 
         <View style={styles.tiles}>
           <Tile icon="book" label={t.songbook} detail={t.songsOfChoir} onPress={() => router.navigate("/songs")} strong />

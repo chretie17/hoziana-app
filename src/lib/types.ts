@@ -85,6 +85,8 @@ export type AppContent = {
   /** Added after the first release, so a copy saved before then lacks them. */
   albums?: Album[];
   updates: UpdatePost[];
+  /** Added after the first release, so a copy saved before then lacks them. */
+  events?: ChoirEvent[];
   story: {
     history: LocalizedCopy;
     /** Added after the first release, so a copy saved before then lacks them. */
@@ -102,4 +104,31 @@ export type Album = {
   title: string;
   /** A track's slug opens its words in the songbook; null when they are not there. */
   tracks: { title: string; slug: string | null }[];
+};
+
+/**
+ * A gathering not over yet, soonest first. Dates and times are Kigali's own,
+ * as the choir announces them.
+ */
+export type ChoirEvent = {
+  id: string;
+  title: string;
+  subtitle: LocalizedCopy;
+  /** Blank lines separate paragraphs. */
+  description: LocalizedCopy;
+  /** First and last day, YYYY-MM-DD; the same for a single day. */
+  start: string;
+  end: string;
+  /** "HH:MM", or empty for a gathering with no set time (all day). */
+  startTime: string;
+  endTime: string;
+  location: string;
+  imageUrl: string;
+  /** Where it was first announced, if anywhere. */
+  link: string;
+  pageUrl: string;
+  /** The calendar file an iPhone opens; add ?lang=rw|en|fr. */
+  calendarFileUrl: string;
+  /** Google Calendar already filled in, for Android. */
+  googleCalendarUrl: LocalizedCopy;
 };
