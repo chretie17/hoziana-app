@@ -36,6 +36,7 @@ function Navigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="song/[slug]" options={{ title: "" }} />
         <Stack.Screen name="album/[id]" options={{ title: "" }} />
+        <Stack.Screen name="event/[id]" options={{ title: "" }} />
         <Stack.Screen name="video/[id]" options={{ title: "", headerStyle: { backgroundColor: palette.dark }, headerTintColor: "#fff" }} />
       </Stack>
     </>

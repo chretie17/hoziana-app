@@ -2,8 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
+import { EventCard } from "@/components/EventCard";
 import { Body, Heading, Kicker, Screen, StatusNote } from "@/components/ui";
 import { useContent } from "@/lib/content";
+import { upcomingEvents } from "@/lib/events";
 import { formatDate, useLanguage } from "@/lib/i18n";
 import { fonts, usePalette } from "@/lib/theme";
 import { openWebsite } from "@/lib/website";
@@ -12,6 +14,7 @@ export default function Updates() {
   const { content, status, refresh } = useContent();
   const { t, language, pick } = useLanguage();
   const palette = usePalette();
+  const events = upcomingEvents(content.events);
 
   return (
     <Screen>
@@ -24,6 +27,13 @@ export default function Updates() {
             <Kicker>{content.brand.name}</Kicker>
             <Heading size={36} style={styles.title}>{t.tabs.updates}</Heading>
             <StatusNote />
+            {events.length > 0 ? (
+              <View style={styles.events}>
+                <Kicker>{t.upcomingEvents}</Kicker>
+                {events.map((event) => <EventCard key={event.id} event={event} />)}
+                <Kicker style={styles.newsKicker}>{t.latestNews}</Kicker>
+              </View>
+            ) : null}
           </View>
         }
         ListEmptyComponent={<Body muted style={styles.empty}>{t.noUpdates}</Body>}
@@ -56,6 +66,8 @@ const styles = StyleSheet.create({
   header: { paddingTop: 14 },
   title: { marginTop: 8, marginBottom: 4 },
   empty: { paddingVertical: 24 },
+  events: { gap: 12, marginTop: 14 },
+  newsKicker: { marginTop: 14 },
   card: { borderWidth: 1, borderRadius: 16, overflow: "hidden" },
   image: { width: "100%", aspectRatio: 16 / 9 },
   body: { padding: 16, gap: 8 },
